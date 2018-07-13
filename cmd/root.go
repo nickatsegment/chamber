@@ -5,7 +5,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"text/tabwriter"
 
+	"github.com/segmentio/chamber/store"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +18,7 @@ var (
 
 	numRetries     int
 	chamberVersion string
+	bucket         string
 )
 
 const (
@@ -35,6 +38,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().IntVarP(&numRetries, "retries", "r", DefaultNumRetries, "For SSM, the number of retries we'll make before giving up")
+	RootCmd.PersistentFlags().StringVarP(&bucket, "bucket", "b", os.Getenv("CHAMBERS3_BUCKET"), "s3 bucket. Default: $CHAMBERS3_BUCKET")
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -61,4 +65,28 @@ func validateKey(key string) error {
 		return fmt.Errorf("Failed to validate key name '%s'.  Only alphanumeric, dashes, and underscores are allowed for key names", key)
 	}
 	return nil
+}
+
+func printSecrets(secrets *store.Secrets, showValues bool) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
+
+	fmt.Fprint(w, "Key\tVersion\tLastModified")
+	if showValues {
+		fmt.Fprint(w, "\tValue")
+	}
+	fmt.Fprintln(w, "")
+
+	for k, v := range secrets.Secrets {
+		fmt.Fprintf(w, "%s\t%s\t%s",
+			k,
+			secrets.Meta.Version,
+			secrets.Meta.LastModified.Local().Format(ShortTimeFormat),
+		)
+		if showValues {
+			fmt.Fprintf(w, "\t%s", v)
+		}
+		fmt.Fprintln(w, "")
+	}
+
+	w.Flush()
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pkg/errors"
 	"github.com/segmentio/chamber/store"
@@ -13,7 +12,6 @@ import (
 
 var (
 	version string
-	bucket  string
 	quiet   bool
 
 	// readCmd represents the read command
@@ -26,7 +24,6 @@ var (
 )
 
 func init() {
-	readCmd.Flags().StringVarP(&bucket, "bucket", "b", os.Getenv("CHAMBERS3_BUCKET"), "s3 bucket. Default: $CHAMBERS3_BUCKET")
 	readCmd.Flags().StringVarP(&version, "version", "v", "", "The version number of the secret. Defaults to latest.")
 	readCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "Only print the secret")
 	RootCmd.AddCommand(readCmd)
@@ -48,10 +45,13 @@ func read(cmd *cobra.Command, args []string) error {
 
 	// TODO: pass prefix
 	secretStore := store.NewS3Store(numRetries, bucket, "")
-
-	val, meta, err := secretStore.Read(service, key, version)
+	secrets, err := secretStore.ReadAll(service, version)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read")
+	}
+	val, ok := secrets.Secrets[key]
+	if !ok {
+		return errors.New("key not found")
 	}
 
 	if quiet {
@@ -59,14 +59,13 @@ func read(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
-	fmt.Fprintln(w, "Key\tValue\tVersion\tLastModified")
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-		key,
-		val,
-		meta.Version,
-		meta.LastModified.Local().Format(ShortTimeFormat),
-	)
-	w.Flush()
+	// filter out everything else
+	for k, _ := range secrets.Secrets {
+		if k != key {
+			delete(secrets.Secrets, k)
+		}
+	}
+
+	printSecrets(secrets, true)
 	return nil
 }
