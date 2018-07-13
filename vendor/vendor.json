@@ -3,12 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "BAGzIXWxLqZRXtZohIsib8o6XIw=",
-			"path": "github.com/aws/aws-sdk-go",
-			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
-			"revisionTime": "2017-09-06T17:30:17Z"
-		},
-		{
 			"checksumSHA1": "VGCkLl9kLkVD9pLTJMyFMy3C1Lo=",
 			"path": "github.com/aws/aws-sdk-go/aws",
 			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
@@ -117,18 +111,6 @@
 			"revisionTime": "2017-09-06T17:30:17Z"
 		},
 		{
-			"checksumSHA1": "O6hcK24yI6w7FA+g4Pbr+eQ7pys=",
-			"path": "github.com/aws/aws-sdk-go/private/protocol/json/jsonutil",
-			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
-			"revisionTime": "2017-09-06T17:30:17Z"
-		},
-		{
-			"checksumSHA1": "R00RL5jJXRYq1iiK1+PGvMfvXyM=",
-			"path": "github.com/aws/aws-sdk-go/private/protocol/jsonrpc",
-			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
-			"revisionTime": "2017-09-06T17:30:17Z"
-		},
-		{
 			"checksumSHA1": "ZqY5RWavBLWTo6j9xqdyBEaNFRk=",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/query",
 			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
@@ -153,18 +135,6 @@
 			"revisionTime": "2017-09-06T17:30:17Z"
 		},
 		{
-			"checksumSHA1": "jCWrivRK+K+oW2ZW3sJSuBIBNjQ=",
-			"path": "github.com/aws/aws-sdk-go/service/ssm",
-			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
-			"revisionTime": "2017-09-06T17:30:17Z"
-		},
-		{
-			"checksumSHA1": "cAxlijULuvw8KAphHrR1+u3+AM0=",
-			"path": "github.com/aws/aws-sdk-go/service/ssm/ssmiface",
-			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
-			"revisionTime": "2017-09-06T17:30:17Z"
-		},
-		{
 			"checksumSHA1": "MerduaV3PxtZAWvOGpgoBIglo38=",
 			"path": "github.com/aws/aws-sdk-go/service/sts",
 			"revision": "58370dfb7321eb567f09391c955860bad0a747da",
@@ -173,13 +143,6 @@
 		{
 			"path": "github.com/aws/aws-sdk-go/ssm",
 			"revision": ""
-		},
-		{
-			"checksumSHA1": "jqSVRDK7dGg6E/NikVq1Kw6gdbA=",
-			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
-			"path": "github.com/davecgh/go-spew/spew",
-			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
-			"revisionTime": "2016-01-29T19:31:06Z"
 		},
 		{
 			"checksumSHA1": "VvZKmbuBN1QAG699KduTdmSPwA4=",
@@ -202,23 +165,10 @@
 			"revisionTime": "2017-03-23T00:38:48Z"
 		},
 		{
-			"checksumSHA1": "8ae1DyNE/yY9NvY3PmvtQdLBJnc=",
-			"path": "github.com/magiconair/properties",
-			"revision": "49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934",
-			"revisionTime": "2017-10-31T21:05:36Z"
-		},
-		{
 			"checksumSHA1": "ynJSWoF6v+3zMnh9R0QmmG6iGV8=",
 			"path": "github.com/pkg/errors",
 			"revision": "ff09b135c25aae272398c51a07235b90a75aa4f0",
 			"revisionTime": "2017-03-16T20:15:38Z"
-		},
-		{
-			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
-			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
-			"path": "github.com/pmezard/go-difflib/difflib",
-			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
-			"revisionTime": "2016-01-29T19:31:06Z"
 		},
 		{
 			"checksumSHA1": "aG5wPXVGAEu90TjPFNZFRtox2Zo=",
@@ -231,13 +181,7 @@
 			"path": "github.com/spf13/pflag",
 			"revision": "e57e3eeb33f795204c1ca35f56c44f83227c6e66",
 			"revisionTime": "2017-05-08T18:43:26Z"
-		},
-		{
-			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
-			"path": "github.com/stretchr/testify/assert",
-			"revision": "9f9027faeb0dad515336ed2f28317f9f8f527ab4",
-			"revisionTime": "2016-01-29T19:31:06Z"
 		}
 	],
-	"rootPath": "github.com/segmentio/chamber"
+	"rootPath": "github.com/segmentio/chamber-s3"
 }
