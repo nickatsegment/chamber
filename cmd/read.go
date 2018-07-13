@@ -12,25 +12,30 @@ import (
 )
 
 var (
-	version int
+	version string
+	bucket  string
 	quiet   bool
 
 	// readCmd represents the read command
 	readCmd = &cobra.Command{
 		Use:   "read <service> <key>",
-		Short: "Read a specific secret from the parameter store",
+		Short: "Read a specific secret from s3",
 		Args:  cobra.ExactArgs(2),
 		RunE:  read,
 	}
 )
 
 func init() {
-	readCmd.Flags().IntVarP(&version, "version", "v", -1, "The version number of the secret. Defaults to latest.")
+	readCmd.Flags().StringVarP(&bucket, "bucket", "b", os.Getenv("CHAMBERS3_BUCKET"), "s3 bucket. Default: $CHAMBERS3_BUCKET")
+	readCmd.Flags().StringVarP(&version, "version", "v", "", "The version number of the secret. Defaults to latest.")
 	readCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "Only print the secret")
 	RootCmd.AddCommand(readCmd)
 }
 
 func read(cmd *cobra.Command, args []string) error {
+	if bucket == "" {
+		return errors.New("bucket not set")
+	}
 	service := strings.ToLower(args[0])
 	if err := validateService(service); err != nil {
 		return errors.Wrap(err, "Failed to validate service")
@@ -41,30 +46,27 @@ func read(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "Failed to validate key")
 	}
 
-	secretStore := store.NewSSMStore(numRetries)
-	secretId := store.SecretId{
-		Service: service,
-		Key:     key,
-	}
+	// TODO: pass prefix
+	secretStore := store.NewS3Store(numRetries, bucket, "")
 
-	secret, err := secretStore.Read(secretId, version)
+	val, meta, err := secretStore.Read(service, key, version)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read")
 	}
 
 	if quiet {
-		fmt.Fprintf(os.Stdout, "%s\n", *secret.Value)
+		fmt.Fprintf(os.Stdout, "%s\n", val)
 		return nil
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
-	fmt.Fprintln(w, "Key\tValue\tVersion\tLastModified\tUser")
-	fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%s\n",
+	fmt.Fprintln(w, "Key\tValue\tVersion\tLastModified")
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 		key,
-		*secret.Value,
-		secret.Meta.Version,
-		secret.Meta.Created.Local().Format(ShortTimeFormat),
-		secret.Meta.CreatedBy)
+		val,
+		meta.Version,
+		meta.LastModified.Local().Format(ShortTimeFormat),
+	)
 	w.Flush()
 	return nil
 }

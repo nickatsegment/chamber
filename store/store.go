@@ -5,64 +5,28 @@ import (
 	"time"
 )
 
-type ChangeEventType int
-
-const (
-	Created ChangeEventType = iota
-	Updated
-)
-
-func (c ChangeEventType) String() string {
-	switch c {
-	case Created:
-		return "Created"
-	case Updated:
-		return "Updated"
-	}
-	return "unknown"
-}
-
 var (
-	// ErrSecretNotFound is returned if the specified secret is not found in the
-	// parameter store
-	ErrSecretNotFound = errors.New("secret not found")
+	// ErrSecretsNotFound is returned if the specified Secrets is not found
+	ErrSecretsNotFound = errors.New("secrets not found")
 )
 
-type SecretId struct {
-	Service string
-	Key     string
-}
-
-type Secret struct {
-	Value *string
-	Meta  SecretMetadata
+type Secrets struct {
+	Secrets RawSecrets
+	Meta    *SecretMetadata
 }
 
 // A secret without any metadata
-type RawSecret struct {
-	Value string
-	Key   string
-}
+type RawSecrets map[string]string
 
 type SecretMetadata struct {
-	Created   time.Time
-	CreatedBy string
-	Version   int
-	Key       string
-}
-
-type ChangeEvent struct {
-	Type    ChangeEventType
-	Time    time.Time
-	User    string
-	Version int
+	Version      string
+	LastModified time.Time
 }
 
 type Store interface {
-	Write(id SecretId, value string) error
-	Read(id SecretId, version int) (Secret, error)
-	List(service string, includeValues bool) ([]Secret, error)
-	ListRaw(service string) ([]RawSecret, error)
-	History(id SecretId) ([]ChangeEvent, error)
-	Delete(id SecretId) error
+	WriteAll(id string, secrets RawSecrets) error
+	Write(id, key, value string) error
+	ReadAll(id, version string) (*Secrets, error)
+	Read(id, key, version string) (string, *SecretMetadata, error)
+	Delete(id string) error
 }
