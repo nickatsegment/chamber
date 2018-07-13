@@ -12,21 +12,33 @@ var (
 
 type Secrets struct {
 	Secrets RawSecrets
-	Meta    *SecretMetadata
+	Meta    *SecretsMetadata
 }
 
 // A secret without any metadata
 type RawSecrets map[string]string
 
-type SecretMetadata struct {
+func (r *RawSecrets) Validate() error {
+	// TODO; need to move validateKey here
+	panic("not implemented")
+}
+
+type SecretsMetadata struct {
 	Version      string
 	LastModified time.Time
 }
 
 type Store interface {
-	WriteAll(id string, secrets RawSecrets) error
-	Write(id, key, value string) error
+	// Write all secrets for secrets `id`
+	WriteAll(id string, secrets RawSecrets) (*Secrets, error)
+	// Write one secret `key` for secrets `id`, returning the new Secrets
+	Write(id, key, value string) (*Secrets, error)
+	// Read all secrets for `id` at `version`, returning the new Secrets
 	ReadAll(id, version string) (*Secrets, error)
-	Read(id, key, version string) (string, *SecretMetadata, error)
-	Delete(id string) error
+	// Read one secret `key` for `id` at `version`
+	Read(id, key, version string) (string, *SecretsMetadata, error)
+	// Delete all secrets for `id`
+	DeleteAll(id string) error
+	// Delete one secret for `id` at `key`
+	Delete(id, key string) error
 }

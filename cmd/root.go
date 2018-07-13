@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/segmentio/chamber-s3/store"
 	"github.com/spf13/cobra"
@@ -19,6 +20,8 @@ var (
 	numRetries       int
 	chamberS3Version string
 	bucket           string
+	// TODO: configurable
+	prefix string = ""
 )
 
 const (
@@ -68,6 +71,7 @@ func validateKey(key string) error {
 }
 
 func printSecrets(secrets *store.Secrets, showValues bool) {
+	// TODO: UX on this isn't the best
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
 
 	fmt.Fprint(w, "Key\tVersion\tLastModified")
@@ -77,10 +81,16 @@ func printSecrets(secrets *store.Secrets, showValues bool) {
 	fmt.Fprintln(w, "")
 
 	for k, v := range secrets.Secrets {
+		var mtime string
+		if secrets.Meta.LastModified == (time.Time{}) {
+			mtime = "?"
+		} else {
+			mtime = secrets.Meta.LastModified.Local().Format(ShortTimeFormat)
+		}
 		fmt.Fprintf(w, "%s\t%s\t%s",
 			k,
 			secrets.Meta.Version,
-			secrets.Meta.LastModified.Local().Format(ShortTimeFormat),
+			mtime,
 		)
 		if showValues {
 			fmt.Fprintf(w, "\t%s", v)

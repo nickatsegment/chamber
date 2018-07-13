@@ -1,11 +1,13 @@
 package store
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -76,17 +78,55 @@ func (s *S3Store) surround(id string) string {
 	return s.Prefix + id + Suffix
 }
 
-func (s *S3Store) WriteAll(id string, secrets RawSecrets) error {
-	// TODO: GET, PUT
-	panic("not implemented")
+// Return's Secrets.Meta.LastModifed will be time.Time 0-value
+func (s *S3Store) WriteAll(id string, secrets RawSecrets) (*Secrets, error) {
+	key := s.surround(id)
+	// TODO: validate RawSecrets
+
+	buf, err := json.Marshal(secrets)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &s3.PutObjectInput{
+		Body:   aws.ReadSeekCloser(bytes.NewReader(buf)),
+		Bucket: aws.String(s.Bucket),
+		Key:    aws.String(key),
+	}
+
+	result, err := s.svc.PutObject(input)
+	if err != nil {
+		return nil, err
+	}
+	return &Secrets{
+		Secrets: secrets,
+		Meta: &SecretsMetadata{
+			Version: *(result.VersionId),
+		},
+	}, nil
 }
 
-func (s *S3Store) Write(id, key, value string) error {
-	// TODO: GET, update, PUT
-	panic("not implemented")
+// Updates Secrets at s3://<bucket>/<prefix><id><suffix> with key=value.
+// If object doesn't exist yet, a new empty one is created.
+// As with WriteAll, return's Secrets.Meta.LastModifed will be
+// time.Time 0-value
+func (s *S3Store) Write(id, key, value string) (*Secrets, error) {
+	secs, err := s.ReadAll(id, "")
+	if err != nil {
+		aerr, ok := err.(awserr.Error)
+		if !ok || aerr.Code() != s3.ErrCodeNoSuchKey {
+			return nil, err
+		}
+		secs = &Secrets{}
+	}
+
+	(*secs).Secrets[key] = value
+	return s.WriteAll(id, (*secs).Secrets)
 }
 
+// version == "" => latest
 func (s *S3Store) ReadAll(id, version string) (*Secrets, error) {
+	// TODO: use version!
 	key := s.surround(id)
 	result, err := s.svc.GetObject(&s3.GetObjectInput{
 		Bucket: &s.Bucket,
@@ -97,7 +137,7 @@ func (s *S3Store) ReadAll(id, version string) (*Secrets, error) {
 		return nil, err
 	}
 
-	rawSecrets := make(map[string]string)
+	rawSecrets := make(RawSecrets)
 	dec := json.NewDecoder(result.Body)
 	if err = dec.Decode(&rawSecrets); err != nil {
 		return nil, err
@@ -105,25 +145,29 @@ func (s *S3Store) ReadAll(id, version string) (*Secrets, error) {
 
 	return &Secrets{
 		Secrets: rawSecrets,
-		Meta: &SecretMetadata{
+		Meta: &SecretsMetadata{
 			Version:      *result.VersionId,
 			LastModified: *result.LastModified,
 		},
 	}, nil
 }
 
-func (s *S3Store) Read(id, key, version string) (string, *SecretMetadata, error) {
+func (s *S3Store) Read(id, key, version string) (string, *SecretsMetadata, error) {
 	secrets, err := s.ReadAll(id, version)
 	if err != nil {
 		return "", nil, err
 	}
-	val, ok := secrets.Secrets[key]
+	val, ok := (*secrets).Secrets[key]
 	if !ok {
 		return "", nil, errors.New("key not found")
 	}
 	return val, secrets.Meta, nil
 }
 
-func (s *S3Store) Delete(id string) error {
+func (s *S3Store) DeleteAll(id string) error {
+	panic("not implemented")
+}
+
+func (s *S3Store) Delete(id, key string) error {
 	panic("not implemented")
 }
