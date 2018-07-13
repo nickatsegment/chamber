@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -41,6 +42,12 @@ func list(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "Failed to read")
 	}
 
-	printSecrets(secrets, withValues)
+	fmt.Printf("Version: %s\n", secrets.Meta.Version)
+	fmt.Printf("LastModified: %s\n", secrets.Meta.LastModified.Local().Format(ShortTimeFormat))
+	fmt.Println()
+
+	for k, v := range secrets.Secrets {
+		fmt.Printf("%s=%s\n", k, v)
+	}
 	return nil
 }

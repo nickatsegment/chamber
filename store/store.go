@@ -30,9 +30,9 @@ type SecretsMetadata struct {
 
 type Store interface {
 	// Write all secrets for secrets `id`
-	WriteAll(id string, secrets RawSecrets) (*Secrets, error)
+	WriteAll(id string, secrets RawSecrets) (version string, err error)
 	// Write one secret `key` for secrets `id`, returning the new Secrets
-	Write(id, key, value string) (*Secrets, error)
+	Write(id, key, value string) (version string, err error)
 	// Read all secrets for `id` at `version`, returning the new Secrets
 	ReadAll(id, version string) (*Secrets, error)
 	// Read one secret `key` for `id` at `version`

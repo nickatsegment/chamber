@@ -5,10 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"text/tabwriter"
-	"time"
 
-	"github.com/segmentio/chamber-s3/store"
 	"github.com/spf13/cobra"
 )
 
@@ -68,35 +65,4 @@ func validateKey(key string) error {
 		return fmt.Errorf("Failed to validate key name '%s'.  Only alphanumeric, dashes, and underscores are allowed for key names", key)
 	}
 	return nil
-}
-
-func printSecrets(secrets *store.Secrets, showValues bool) {
-	// TODO: UX on this isn't the best
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
-
-	fmt.Fprint(w, "Key\tVersion\tLastModified")
-	if showValues {
-		fmt.Fprint(w, "\tValue")
-	}
-	fmt.Fprintln(w, "")
-
-	for k, v := range secrets.Secrets {
-		var mtime string
-		if secrets.Meta.LastModified == (time.Time{}) {
-			mtime = "?"
-		} else {
-			mtime = secrets.Meta.LastModified.Local().Format(ShortTimeFormat)
-		}
-		fmt.Fprintf(w, "%s\t%s\t%s",
-			k,
-			secrets.Meta.Version,
-			mtime,
-		)
-		if showValues {
-			fmt.Fprintf(w, "\t%s", v)
-		}
-		fmt.Fprintln(w, "")
-	}
-
-	w.Flush()
 }

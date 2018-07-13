@@ -59,13 +59,14 @@ func read(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// filter out everything else
-	for k, _ := range secrets.Secrets {
-		if k != key {
-			delete(secrets.Secrets, k)
+	fmt.Printf("Version: %s\n", secrets.Meta.Version)
+	fmt.Printf("LastModified: %s\n", secrets.Meta.LastModified.Local().Format(ShortTimeFormat))
+	fmt.Println()
+
+	for k, v := range secrets.Secrets {
+		if k == key {
+			fmt.Printf("%s=%s\n", k, v)
 		}
 	}
-
-	printSecrets(secrets, true)
 	return nil
 }

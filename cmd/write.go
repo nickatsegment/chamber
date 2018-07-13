@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -59,10 +60,10 @@ func write(cmd *cobra.Command, args []string) error {
 	}
 
 	secretStore := store.NewS3Store(numRetries, bucket, prefix)
-	result, err := secretStore.Write(service, key, value)
+	newVersion, err := secretStore.Write(service, key, value)
 	if err != nil {
 		return err
 	}
-	printSecrets(result, false)
+	fmt.Printf("Version: %s\n", newVersion)
 	return nil
 }

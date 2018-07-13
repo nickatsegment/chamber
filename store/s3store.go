@@ -79,13 +79,13 @@ func (s *S3Store) surround(id string) string {
 }
 
 // Return's Secrets.Meta.LastModifed will be time.Time 0-value
-func (s *S3Store) WriteAll(id string, secrets RawSecrets) (*Secrets, error) {
+func (s *S3Store) WriteAll(id string, secrets RawSecrets) (string, error) {
 	key := s.surround(id)
 	// TODO: validate RawSecrets
 
 	buf, err := json.Marshal(secrets)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	input := &s3.PutObjectInput{
@@ -96,26 +96,21 @@ func (s *S3Store) WriteAll(id string, secrets RawSecrets) (*Secrets, error) {
 
 	result, err := s.svc.PutObject(input)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &Secrets{
-		Secrets: secrets,
-		Meta: &SecretsMetadata{
-			Version: *(result.VersionId),
-		},
-	}, nil
+	return *(result.VersionId), nil
 }
 
 // Updates Secrets at s3://<bucket>/<prefix><id><suffix> with key=value.
 // If object doesn't exist yet, a new empty one is created.
 // As with WriteAll, return's Secrets.Meta.LastModifed will be
 // time.Time 0-value
-func (s *S3Store) Write(id, key, value string) (*Secrets, error) {
+func (s *S3Store) Write(id, key, value string) (string, error) {
 	secs, err := s.ReadAll(id, "")
 	if err != nil {
 		aerr, ok := err.(awserr.Error)
 		if !ok || aerr.Code() != s3.ErrCodeNoSuchKey {
-			return nil, err
+			return "", err
 		}
 		secs = &Secrets{}
 	}
