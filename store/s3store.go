@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-const DefaultPrefix string = "chamber/"
 const Suffix string = ".json"
 
 type S3Store struct {
@@ -56,9 +55,6 @@ func awsSessionAndRegion() (*session.Session, *string) {
 }
 
 func NewS3Store(numRetries int, bucket string, prefix string) *S3Store {
-	if prefix == "" {
-		prefix = DefaultPrefix
-	}
 	session, region := awsSessionAndRegion()
 
 	svc := s3.New(session, &aws.Config{

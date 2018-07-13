@@ -59,7 +59,7 @@ func write(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	secretStore := store.NewS3Store(numRetries, bucket, prefix)
+	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
 	newVersion, err := secretStore.Write(service, key, value)
 	if err != nil {
 		return err

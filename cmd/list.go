@@ -35,8 +35,7 @@ func list(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "Failed to validate service")
 	}
 
-	// TODO: pass prefix
-	secretStore := store.NewS3Store(numRetries, bucket, "")
+	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
 	secrets, err := secretStore.ReadAll(service, version)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read")

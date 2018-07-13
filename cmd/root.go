@@ -17,9 +17,10 @@ var (
 	numRetries       int
 	chamberS3Version string
 	bucket           string
-	// TODO: configurable
-	prefix string = ""
+	s3PathPrefix     string
 )
+
+const DefaultPrefix string = "chamber/"
 
 const (
 	// ShortTimeFormat is a short format for printing timestamps
@@ -38,7 +39,8 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().IntVarP(&numRetries, "retries", "r", DefaultNumRetries, "number of retries we'll make before giving up")
-	RootCmd.PersistentFlags().StringVarP(&bucket, "bucket", "b", os.Getenv("CHAMBER_S3_BUCKET"), "s3 bucket. Default: $CHAMBER_S3_BUCKET")
+	RootCmd.PersistentFlags().StringVarP(&bucket, "bucket", "b", os.Getenv("CHAMBER_S3_BUCKET"), "s3 bucket. Default from $CHAMBER_S3_BUCKET")
+	RootCmd.PersistentFlags().StringVarP(&s3PathPrefix, "prefix", "p", DefaultPrefix, "s3 path prefix")
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
