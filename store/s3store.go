@@ -117,11 +117,17 @@ func (s *S3Store) Write(id, key, value string) (string, error) {
 
 // version == "" => latest
 func (s *S3Store) ReadAll(id, version string) (*Secrets, error) {
-	// TODO: use version!
+	var versionId *string
 	key := s.surround(id)
+	if version == "" {
+		versionId = nil
+	} else {
+		versionId = &version
+	}
 	result, err := s.svc.GetObject(&s3.GetObjectInput{
-		Bucket: &s.Bucket,
-		Key:    &key,
+		Bucket:    &s.Bucket,
+		Key:       &key,
+		VersionId: versionId,
 	})
 
 	if err != nil {
