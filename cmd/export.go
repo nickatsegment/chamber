@@ -12,19 +12,20 @@ import (
 
 	"github.com/magiconair/properties"
 	"github.com/pkg/errors"
-	"github.com/segmentio/chamber/store"
+	"github.com/segmentio/chamber-s3/store"
 	"github.com/spf13/cobra"
 )
 
 // exportCmd represents the export command
 var (
-	exportFormat string
-	exportOutput string
+	exportFormat  string
+	exportOutput  string
+	exportVersion string
 
 	exportCmd = &cobra.Command{
-		Use:   "export <service...>",
+		Use:   "export <service>",
 		Short: "Exports parameters in the specified format",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE:  runExport,
 	}
 )
@@ -32,31 +33,27 @@ var (
 func init() {
 	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "Output format (json, java-properties, csv, tsv, dotenv)")
 	exportCmd.Flags().StringVarP(&exportOutput, "output-file", "o", "", "Output file (default is standard output)")
+	exportCmd.Flags().StringVarP(&exportVersion, "version", "v", "", "The version number of the secret. Defaults to latest.")
 	RootCmd.AddCommand(exportCmd)
 }
 
 func runExport(cmd *cobra.Command, args []string) error {
 	var err error
 
-	secretStore := store.NewSSMStore(numRetries)
-	params := make(map[string]string)
-	for _, service := range args {
-		if err := validateService(service); err != nil {
-			return errors.Wrapf(err, "Failed to validate service %s", service)
-		}
-
-		rawSecrets, err := secretStore.ListRaw(strings.ToLower(service))
-		if err != nil {
-			return errors.Wrapf(err, "Failed to list store contents for service %s", service)
-		}
-		for _, rawSecret := range rawSecrets {
-			k := key(rawSecret.Key)
-			if _, ok := params[k]; ok {
-				fmt.Fprintf(os.Stderr, "warning: parameter %s specified more than once (overriden by service %s)\n", k, service)
-			}
-			params[k] = rawSecret.Value
-		}
+	service := args[0]
+	if err != nil {
+		return errors.Wrap(err, "Failed to read")
 	}
+
+	if err := store.validateService(service); err != nil {
+		return errors.Wrapf(err, "Failed to validate service %s", service)
+	}
+	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
+	secrets, err := secretStore.ReadAll(service, exportVersion)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read")
+	}
+	params := secrets.Secrets
 
 	file := os.Stdout
 	if exportOutput != "" {

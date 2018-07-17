@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pkg/errors"
-	"github.com/segmentio/chamber/store"
+	"github.com/segmentio/chamber-s3/store"
 	"github.com/spf13/cobra"
 )
 
@@ -29,50 +27,26 @@ func init() {
 }
 
 func list(cmd *cobra.Command, args []string) error {
+	if bucket == "" {
+		return errors.New("bucket not set")
+	}
 	service := strings.ToLower(args[0])
-	if err := validateService(service); err != nil {
+	if err := store.validateService(service); err != nil {
 		return errors.Wrap(err, "Failed to validate service")
 	}
 
-	secretStore := store.NewSSMStore(numRetries)
-	secrets, err := secretStore.List(service, withValues)
+	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
+	secrets, err := secretStore.ReadAll(service, version)
 	if err != nil {
-		return errors.Wrap(err, "Failed to list store contents")
+		return errors.Wrap(err, "Failed to read")
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
+	fmt.Printf("Version: %s\n", secrets.Meta.Version)
+	fmt.Printf("LastModified: %s\n", secrets.Meta.LastModified.Local().Format(ShortTimeFormat))
+	fmt.Println()
 
-	fmt.Fprint(w, "Key\tVersion\tLastModified\tUser")
-	if withValues {
-		fmt.Fprint(w, "\tValue")
+	for k, v := range secrets.Secrets {
+		fmt.Printf("%s=%s\n", k, v)
 	}
-	fmt.Fprintln(w, "")
-
-	for _, secret := range secrets {
-		fmt.Fprintf(w, "%s\t%d\t%s\t%s",
-			key(secret.Meta.Key),
-			secret.Meta.Version,
-			secret.Meta.Created.Local().Format(ShortTimeFormat),
-			secret.Meta.CreatedBy)
-		if withValues {
-			fmt.Fprintf(w, "\t%s", *secret.Value)
-		}
-		fmt.Fprintln(w, "")
-	}
-
-	w.Flush()
 	return nil
-}
-
-func key(s string) string {
-	_, noPaths := os.LookupEnv("CHAMBER_NO_PATHS")
-	if !noPaths {
-		tokens := strings.Split(s, "/")
-		secretKey := tokens[2]
-		return secretKey
-	}
-
-	tokens := strings.Split(s, ".")
-	secretKey := tokens[1]
-	return secretKey
 }

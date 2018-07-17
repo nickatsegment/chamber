@@ -6,21 +6,19 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/segmentio/chamber/store"
+	"github.com/segmentio/chamber-s3/store"
 	"github.com/spf13/cobra"
 )
 
 // execCmd represents the exec command
 var execCmd = &cobra.Command{
-	Use:   "exec <service...> -- <command> [<arg...>]",
+	Use:   "exec <service> -- <command> [<arg...>]",
 	Short: "Executes a command with secrets loaded into the environment",
 	Args: func(cmd *cobra.Command, args []string) error {
 		dashIx := cmd.ArgsLenAtDash()
-		if dashIx == -1 {
+		if dashIx != 1 {
+			panic(fmt.Sprintf("%d", dashIx))
 			return errors.New("please separate services and command with '--'. See usage")
-		}
-		if err := cobra.MinimumNArgs(1)(cmd, args[:dashIx]); err != nil {
-			return errors.Wrap(err, "at least one service must be specified")
 		}
 		if err := cobra.MinimumNArgs(1)(cmd, args[dashIx:]); err != nil {
 			return errors.Wrap(err, "must specify command to run. See usage")
@@ -35,29 +33,26 @@ func init() {
 }
 
 func execRun(cmd *cobra.Command, args []string) error {
-	dashIx := cmd.ArgsLenAtDash()
-	services, command, commandArgs := args[:dashIx], args[dashIx], args[dashIx+1:]
+	service, command, commandArgs := args[0], args[1], args[2:]
 
 	env := environ(os.Environ())
-	secretStore := store.NewSSMStore(numRetries)
-	for _, service := range services {
-		if err := validateService(service); err != nil {
-			return errors.Wrap(err, "Failed to validate service")
-		}
+	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
+	if err := store.validateService(service); err != nil {
+		return errors.Wrap(err, "Failed to validate service")
+	}
 
-		rawSecrets, err := secretStore.ListRaw(strings.ToLower(service))
-		if err != nil {
-			return errors.Wrap(err, "Failed to list store contents")
-		}
-		for _, rawSecret := range rawSecrets {
-			envVarKey := strings.ToUpper(key(rawSecret.Key))
-			envVarKey = strings.Replace(envVarKey, "-", "_", -1)
+	secrets, err := secretStore.ReadAll(strings.ToLower(service), "")
+	if err != nil {
+		return errors.Wrap(err, "Failed to list store contents")
+	}
+	for k, v := range secrets.Secrets {
+		envVarKey := strings.ToUpper(k)
+		envVarKey = strings.Replace(envVarKey, "-", "_", -1)
 
-			if env.IsSet(envVarKey) {
-				fmt.Fprintf(os.Stderr, "warning: overwriting environment variable %s\n", envVarKey)
-			}
-			env.Set(envVarKey, rawSecret.Value)
+		if env.IsSet(envVarKey) {
+			fmt.Fprintf(os.Stderr, "warning: overwriting environment variable %s\n", envVarKey)
 		}
+		env.Set(envVarKey, v)
 	}
 
 	return exec(command, commandArgs, env)

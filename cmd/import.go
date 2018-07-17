@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/segmentio/chamber/store"
+	"github.com/segmentio/chamber-s3/store"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ func init() {
 
 func importRun(cmd *cobra.Command, args []string) error {
 	service := strings.ToLower(args[0])
-	if err := validateService(service); err != nil {
+	if err := store.validateService(service); err != nil {
 		return errors.Wrap(err, "Failed to validate service")
 	}
 
@@ -51,18 +51,11 @@ func importRun(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "Failed to decode input as json")
 	}
 
-	secretStore := store.NewSSMStore(numRetries)
-
-	for key, value := range toBeImported {
-		secretId := store.SecretId{
-			Service: service,
-			Key:     key,
-		}
-		if err := secretStore.Write(secretId, value); err != nil {
-			return errors.Wrap(err, "Failed to write secret")
-		}
+	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
+	newVersion, err := secretStore.WriteAll(service, toBeImported)
+	if err != nil {
+		return err
 	}
-
 	fmt.Fprintf(os.Stdout, "Successfully imported %d secrets\n", len(toBeImported))
 	return nil
 }
