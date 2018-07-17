@@ -45,7 +45,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "Failed to read")
 	}
 
-	if err := validateService(service); err != nil {
+	if err := store.validateService(service); err != nil {
 		return errors.Wrapf(err, "Failed to validate service %s", service)
 	}
 	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)

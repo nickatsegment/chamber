@@ -1,19 +1,13 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
-// Regex's used to validate service and key names
 var (
-	validKeyFormat     = regexp.MustCompile(`^[A-Za-z0-9-_]+$`)
-	validServiceFormat = regexp.MustCompile(`^[A-Za-z0-9-_]+$`)
-
 	numRetries       int
 	chamberS3Version string
 	bucket           string
@@ -53,18 +47,4 @@ func Execute(vers string) {
 		}
 		os.Exit(1)
 	}
-}
-
-func validateService(service string) error {
-	if !validServiceFormat.MatchString(service) {
-		return fmt.Errorf("Failed to validate service name '%s'.  Only alphanumeric, dashes, and underscores are allowed for service names", service)
-	}
-	return nil
-}
-
-func validateKey(key string) error {
-	if !validKeyFormat.MatchString(key) {
-		return fmt.Errorf("Failed to validate key name '%s'.  Only alphanumeric, dashes, and underscores are allowed for key names", key)
-	}
-	return nil
 }

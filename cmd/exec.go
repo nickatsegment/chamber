@@ -37,7 +37,7 @@ func execRun(cmd *cobra.Command, args []string) error {
 
 	env := environ(os.Environ())
 	secretStore := store.NewS3Store(numRetries, bucket, s3PathPrefix)
-	if err := validateService(service); err != nil {
+	if err := store.validateService(service); err != nil {
 		return errors.Wrap(err, "Failed to validate service")
 	}
 

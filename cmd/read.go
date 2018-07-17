@@ -34,12 +34,12 @@ func read(cmd *cobra.Command, args []string) error {
 		return errors.New("bucket not set")
 	}
 	service := strings.ToLower(args[0])
-	if err := validateService(service); err != nil {
+	if err := store.validateService(service); err != nil {
 		return errors.Wrap(err, "Failed to validate service")
 	}
 
 	key := strings.ToLower(args[1])
-	if err := validateKey(key); err != nil {
+	if err := store.validateKey(key); err != nil {
 		return errors.Wrap(err, "Failed to validate key")
 	}
 

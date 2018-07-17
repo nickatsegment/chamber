@@ -76,8 +76,11 @@ func (s *S3Store) surround(id string) string {
 
 // Return's Secrets.Meta.LastModifed will be time.Time 0-value
 func (s *S3Store) WriteAll(id string, secrets RawSecrets) (string, error) {
+	err := secrets.Validate()
+	if err != nil {
+		return "", err
+	}
 	key := s.surround(id)
-	// TODO: validate RawSecrets
 
 	buf, err := json.Marshal(secrets)
 	if err != nil {
