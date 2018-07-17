@@ -56,8 +56,6 @@ func importRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Version: %s\n", newVersion)
-
 	fmt.Fprintf(os.Stdout, "Successfully imported %d secrets\n", len(toBeImported))
 	return nil
 }
