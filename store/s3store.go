@@ -74,7 +74,6 @@ func (s *S3Store) surround(id string) string {
 	return s.Prefix + id + Suffix
 }
 
-// Return's Secrets.Meta.LastModifed will be time.Time 0-value
 func (s *S3Store) WriteAll(id string, secrets RawSecrets) (string, error) {
 	err := secrets.Validate()
 	if err != nil {
@@ -102,8 +101,6 @@ func (s *S3Store) WriteAll(id string, secrets RawSecrets) (string, error) {
 
 // Updates Secrets at s3://<bucket>/<prefix><id><suffix> with key=value.
 // If object doesn't exist yet, a new empty one is created.
-// As with WriteAll, return's Secrets.Meta.LastModifed will be
-// time.Time 0-value
 func (s *S3Store) Write(id, key, value string) (string, error) {
 	secs, err := s.ReadAll(id, "")
 	if err != nil {
